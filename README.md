@@ -57,8 +57,31 @@ uploads, activity feed), user management (search, per-user quotas,
 enable/disable with session revocation, grant/revoke admin), per-user detail
 (devices, job history, audit trail), and a filterable audit log browser.
 
-Create the first administrator by setting `Admin:BootstrapEmail` to a registered
-account's email (env var `Admin__BootstrapEmail`); it is promoted at startup.
+Create the first administrator one of two ways:
+
+- **Bootstrap an existing account** — set `Admin:BootstrapEmail` to a registered
+  account's email (env var `Admin__BootstrapEmail`); it is promoted at startup.
+- **Seed a default admin (dev/demo only)** — run the optional script
+  `database/seed/004_seed_admin.sql`, which creates a ready-to-use admin:
+
+  | Email | Password |
+  |---|---|
+  | `admin@ibackup.local` | `Admin@iBackup2026` |
+
+  ```bash
+  # against the docker SQL Server
+  docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -C \
+    -S localhost -U sa -P 'iBackup!Dev2026' -d iBackup \
+    -i /dev/stdin < database/seed/004_seed_admin.sql
+  ```
+
+  > ⚠️ These are **public, well-known credentials** committed to the repo. They
+  > exist only for local development and demos. The script is deliberately **not**
+  > run by the automatic schema initializer (it lives in `database/seed/`, outside
+  > the auto-run glob). **Never** run it against a production or internet-exposed
+  > database, and change the password from the Users page if you do. It's
+  > idempotent and never resets a password you've already changed.
+
 Further admins are promoted from the Users page. Admins cannot disable or
 demote their own account.
 
