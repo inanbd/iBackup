@@ -6,7 +6,9 @@ using iBackup.Server.Application;
 using iBackup.Server.Application.Abstractions;
 using iBackup.Server.Infrastructure;
 using iBackup.Server.Infrastructure.Data;
+using iBackup.Server.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -47,24 +49,33 @@ try
     builder.Services.AddScoped<ICurrentUser, CurrentUser>();
     builder.Services.AddControllers();
 
-    // JWT bearer authentication.
-    var signingKey = builder.Configuration["Jwt:SigningKey"]
-        ?? throw new InvalidOperationException("Jwt:SigningKey is not configured.");
+    // JWT bearer authentication. Validation parameters are bound from JwtOptions
+    // at runtime (not from a build-time configuration snapshot) so the token
+    // service and the validator always agree on the key - including under
+    // WebApplicationFactory, which applies configuration overrides after
+    // Program.cs has executed.
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
+        .AddJwtBearer();
+    builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+        .Configure<IOptions<JwtOptions>>((options, jwtOptions) =>
         {
+            var jwt = jwtOptions.Value;
+            if (string.IsNullOrEmpty(jwt.SigningKey))
+            {
+                throw new InvalidOperationException("Jwt:SigningKey is not configured.");
+            }
             options.MapInboundClaims = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "iBackup",
+                ValidIssuer = jwt.Issuer,
                 ValidateAudience = true,
-                ValidAudience = builder.Configuration["Jwt:Audience"] ?? "iBackup.Clients",
+                ValidAudience = jwt.Audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromSeconds(30),
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
                 NameClaimType = "sub"
             };
         });
@@ -158,8 +169,10 @@ try
     Log.Information("iBackup server starting");
     await app.RunAsync();
 }
-catch (Exception ex)
+catch (Exception ex) when (ex.GetType().Name is not "HostAbortedException" and not "StopTheHostException")
 {
+    // The filtered exceptions are thrown by WebApplicationFactory / design-time
+    // tooling to take over host construction and must not be swallowed.
     Log.Fatal(ex, "iBackup server terminated unexpectedly");
 }
 finally

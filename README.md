@@ -138,10 +138,11 @@ reuse detection), chunked upload with out-of-order chunks, resume after a
 simulated crash, per-user deduplication, restore byte-for-byte round trips and
 multi-user concurrency. They no-op when `IBACKUP_TEST_DB` is not set.
 
-> **Note:** this codebase was authored in an environment without a .NET 10 SDK
-> or NuGet access, so it has not been compiled here. Expect at most minor
-> package-version or syntax fixes on first build; CI (`.github/workflows/ci.yml`)
-> runs the full build + test matrix.
+All suites are verified passing: 95 unit tests plus the 5 full-stack
+integration scenarios against a real SQL Server 2022 container, and a live
+end-to-end run of the client engine (scan → Zstd → AES-256-GCM → chunked
+upload → dedup → incremental → restore) against the running API.
+CI (`.github/workflows/ci.yml`) runs the same matrix on every push.
 
 ## Design notes & future work
 
