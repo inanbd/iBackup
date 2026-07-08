@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>iBackup.Shared</RootNamespace>
+    <Description>Shared API contracts and enums used by both the iBackup server and clients.</Description>
+  </PropertyGroup>
+
+</Project>

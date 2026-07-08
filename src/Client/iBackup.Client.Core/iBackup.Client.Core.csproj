@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Plain net10.0 so the engine and its tests build cross-platform;
+         DPAPI (CredentialStore) is guarded and only used on Windows. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <RootNamespace>iBackup.Client.Core</RootNamespace>
+    <Description>Backup engine shared by the WPF app and the Windows service: scanning, monitoring, scheduling, crypto, compression and the resumable chunked upload engine.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\iBackup.Shared\iBackup.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>iBackup.Server.Api</RootNamespace>
+    <Description>ASP.NET Core Web API host for the iBackup server.</Description>
+    <UserSecretsId>ibackup-server-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\iBackup.Server.Application\iBackup.Server.Application.csproj" />
+    <ProjectReference Include="..\iBackup.Server.Infrastructure\iBackup.Server.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

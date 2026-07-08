@@ -1,0 +1,45 @@
+# Local development stack: SQL Server + the iBackup API.
+#
+#   docker compose up -d sqlserver          # database only (run the API from the IDE)
+#   docker compose up --build               # database + API
+#
+# The API initializes the schema on startup (Database__InitializeOnStartup=true).
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "iBackup!Dev2026"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'iBackup!Dev2026' -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Server/iBackup.Server.Api/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__Default: "Server=sqlserver;Database=iBackup;User Id=sa;Password=iBackup!Dev2026;TrustServerCertificate=True"
+      Database__InitializeOnStartup: "true"
+      Database__ScriptsPath: "/app/database"
+      Storage__RootPath: "/data/storage"
+      Jwt__SigningKey: "local-dev-only-signing-key-of-32-bytes-min!"
+    ports:
+      - "8080:8080"
+    volumes:
+      - storage-data:/data/storage
+
+volumes:
+  mssql-data:
+  storage-data:

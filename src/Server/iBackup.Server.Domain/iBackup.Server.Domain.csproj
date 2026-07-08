@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>iBackup.Server.Domain</RootNamespace>
+    <Description>Domain entities and rules for the iBackup server.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\iBackup.Shared\iBackup.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

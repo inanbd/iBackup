@@ -1,0 +1,34 @@
+<UserControl x:Class="iBackup.Client.App.Views.LogsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Logs" Style="{StaticResource PageTitle}" />
+        <Button DockPanel.Dock="Top" Content="Refresh" Command="{Binding RefreshCommand}"
+                HorizontalAlignment="Left" Padding="12,6" Margin="0,0,0,12" />
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="160" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Notifications" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Notifications}" AutoGenerateColumns="False"
+                      IsReadOnly="True" HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Time" Binding="{Binding TimestampUtc}" Width="150" />
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="150" />
+                    <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="180" />
+                    <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="2" Text="Client log (latest file)" FontWeight="SemiBold" Margin="0,12,0,6" />
+            <TextBox Grid.Row="3" Text="{Binding LogTail, Mode=OneWay}" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap"
+                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
+        </Grid>
+    </DockPanel>
+</UserControl>

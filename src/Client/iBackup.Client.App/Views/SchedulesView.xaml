@@ -1,0 +1,42 @@
+<UserControl x:Class="iBackup.Client.App.Views.SchedulesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Schedules" Style="{StaticResource PageTitle}" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Error}" Foreground="#DC2626" TextWrapping="Wrap" />
+
+        <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False" HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Folder" Binding="{Binding Path}" Width="*" IsReadOnly="True" />
+                <DataGridTemplateColumn Header="Schedule" Width="140">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DataContext.ScheduleTypes, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                      SelectedItem="{Binding Type, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Every (min)" Binding="{Binding IntervalMinutes, UpdateSourceTrigger=PropertyChanged}" Width="90" />
+                <DataGridTextColumn Header="Time (HH:mm)" Binding="{Binding TimeOfDay, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                <DataGridTemplateColumn Header="Weekday" Width="110">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DataContext.DaysOfWeek, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                      SelectedItem="{Binding DayOfWeek, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Day of month" Binding="{Binding DayOfMonth, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                <DataGridTemplateColumn Header="" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Save" Padding="10,2"
+                                    Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

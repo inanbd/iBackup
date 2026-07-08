@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    # Windows runner: the WPF app and Windows service only build on Windows.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore iBackup.sln
+
+      - name: Build
+        run: dotnet build iBackup.sln --configuration Release --no-restore
+
+      - name: Unit tests
+        run: >
+          dotnet test iBackup.sln --configuration Release --no-build
+          --logger "trx;LogFileName=results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.trx"
+
+  integration-tests:
+    # Full-stack API tests against a real SQL Server container.
+    runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "iBackup!Ci2026"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'iBackup!Ci2026' -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Create test database
+        run: |
+          docker exec ${{ job.services.sqlserver.id }} /opt/mssql-tools18/bin/sqlcmd \
+            -C -S localhost -U sa -P 'iBackup!Ci2026' -Q "CREATE DATABASE iBackup_Test"
+
+      - name: Run integration tests
+        env:
+          IBACKUP_TEST_DB: "Server=localhost;Database=iBackup_Test;User Id=sa;Password=iBackup!Ci2026;TrustServerCertificate=True"
+        run: >
+          dotnet test tests/iBackup.Server.IntegrationTests/iBackup.Server.IntegrationTests.csproj
+          --configuration Release

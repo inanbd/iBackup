@@ -1,0 +1,44 @@
+## .NET / Visual Studio
+bin/
+obj/
+out/
+publish/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+.idea/
+*.swp
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## NuGet
+*.nupkg
+packages/
+!packages/build/
+
+## Local settings / secrets
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+*.pfx
+*.snk
+
+## Logs & local data
+logs/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+## OS
+Thumbs.db
+.DS_Store
