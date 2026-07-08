@@ -26,6 +26,43 @@ public sealed class DbInitializer
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
+        await RunScriptsAsync(ct);
+        await BootstrapAdminAsync(ct);
+    }
+
+    /// <summary>
+    /// Promotes the account named in Admin:BootstrapEmail to administrator.
+    /// Runs on every startup (idempotent) so the first admin can be created by
+    /// configuration alone; further admins are promoted from the admin UI.
+    /// </summary>
+    private async Task BootstrapAdminAsync(CancellationToken ct)
+    {
+        var email = _configuration.GetValue<string>("Admin:BootstrapEmail");
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return;
+        }
+
+        try
+        {
+            await using var connection = await _connections.OpenConnectionAsync(ct);
+            await using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE dbo.Users SET IsAdmin = 1 WHERE Email = @Email AND IsAdmin = 0;";
+            command.Parameters.AddWithValue("@Email", email.Trim().ToLowerInvariant());
+            if (await command.ExecuteNonQueryAsync(ct) == 1)
+            {
+                _logger.LogInformation("Bootstrapped admin account {Email}", email);
+            }
+        }
+        catch (Exception ex)
+        {
+            // The account may not exist yet; bootstrap will succeed on a later start.
+            _logger.LogWarning(ex, "Admin bootstrap for {Email} failed; will retry on next startup", email);
+        }
+    }
+
+    private async Task RunScriptsAsync(CancellationToken ct)
+    {
         if (!_configuration.GetValue("Database:InitializeOnStartup", false))
         {
             return;

@@ -20,7 +20,7 @@ backed by SQL Server. The server never sees plaintext.
 
 | Path | Project | Purpose |
 |---|---|---|
-| `src/Server/iBackup.Server.Api` | ASP.NET Core host | Controllers, JWT auth, Swagger, rate limiting, Serilog, middleware |
+| `src/Server/iBackup.Server.Api` | ASP.NET Core host | Controllers, JWT auth, Swagger, rate limiting, Serilog, middleware, Razor Pages admin dashboard (`/Admin`) |
 | `src/Server/iBackup.Server.Application` | Application layer | Vertical slices: CQRS commands/queries, MediatR handlers, FluentValidation, per-slice ADO.NET SQL |
 | `src/Server/iBackup.Server.Infrastructure` | Infrastructure | SQL connection factory, JWT + BCrypt, disk storage, audit logging, background services |
 | `src/Server/iBackup.Server.Domain` | Domain | Entities, domain exceptions |
@@ -46,6 +46,21 @@ dotnet run
 ```
 
 Or run the whole stack in containers: `docker compose up --build`.
+
+### Admin dashboard
+
+The server hosts a Razor Pages **admin dashboard** at `/Admin` (server-side UI is
+admin-only; end users work through the desktop client). It is cookie-authenticated,
+separate from the JWT scheme the API uses, and restricted to accounts with the
+`IsAdmin` flag. Pages: server-wide overview (users, storage, jobs, in-flight
+uploads, activity feed), user management (search, per-user quotas,
+enable/disable with session revocation, grant/revoke admin), per-user detail
+(devices, job history, audit trail), and a filterable audit log browser.
+
+Create the first administrator by setting `Admin:BootstrapEmail` to a registered
+account's email (env var `Admin__BootstrapEmail`); it is promoted at startup.
+Further admins are promoted from the Users page. Admins cannot disable or
+demote their own account.
 
 **Before production**: set a strong `Jwt:SigningKey` (≥ 32 bytes) and the
 `ConnectionStrings:Default` via environment variables or a secret store, put the

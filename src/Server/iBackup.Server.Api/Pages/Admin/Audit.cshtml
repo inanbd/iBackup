@@ -1,0 +1,56 @@
+@page
+@model iBackup.Server.Api.Pages.Admin.AuditModel
+@{
+    ViewData["Title"] = "Audit log — iBackup Admin";
+}
+<h1>Audit log</h1>
+
+<div class="panel">
+    <form method="get" class="row">
+        <input type="text" name="email" value="@Model.Email" placeholder="Filter by user email…" style="width:220px;" />
+        <input type="text" name="action" value="@Model.Action" placeholder="Filter by action, e.g. auth.login" style="width:220px;" />
+        <button type="submit" class="primary">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Email) || !string.IsNullOrEmpty(Model.Action))
+        {
+            <a class="btn" asp-page="/Admin/Audit">Clear</a>
+        }
+        <span class="muted">@Model.Entries.TotalCount entries</span>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr><th>Time (UTC)</th><th>Action</th><th>User</th><th>Details</th><th>IP</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var e in Model.Entries.Items)
+    {
+        <tr>
+            <td>@e.TimestampUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td><code>@e.Action</code></td>
+            <td>@(e.UserEmail ?? "—")</td>
+            <td class="muted">@e.Details</td>
+            <td class="muted">@e.IpAddress</td>
+        </tr>
+    }
+    @if (Model.Entries.Items.Count == 0)
+    {
+        <tr><td colspan="5" class="muted">No entries match.</td></tr>
+    }
+    </tbody>
+</table>
+
+@if (Model.Entries.TotalPages > 1)
+{
+    <div class="pager">
+        @if (Model.P > 1)
+        {
+            <a class="btn" asp-page="/Admin/Audit" asp-route-email="@Model.Email" asp-route-action="@Model.Action" asp-route-p="@(Model.P - 1)">← Previous</a>
+        }
+        <span class="muted">Page @Model.P of @Model.Entries.TotalPages</span>
+        @if (Model.P < Model.Entries.TotalPages)
+        {
+            <a class="btn" asp-page="/Admin/Audit" asp-route-email="@Model.Email" asp-route-action="@Model.Action" asp-route-p="@(Model.P + 1)">Next →</a>
+        }
+    </div>
+}

@@ -95,6 +95,29 @@ POST /api/backup/finish               (job statistics)
   deletes orphaned storage objects from disk and returns the bytes to the
   user's quota.
 
+### Admin dashboard (Razor Pages)
+
+Server-side UI exists only as an admin dashboard under `/Admin`
+(`src/Server/iBackup.Server.Api/Pages/Admin`); end users never touch it.
+
+- **Auth**: a dedicated cookie scheme (`AdminCookies`) alongside the JWT bearer
+  scheme. The `/Admin` folder is gated by an `AdminUI` policy requiring the
+  `Admin` role; the API's JWT surface is untouched. Cookies are HttpOnly,
+  SameSite=Strict, 8 h sliding expiration. The cookie principal carries the
+  same `sub` claim as JWTs, so `ICurrentUser` (and therefore audit logging)
+  works identically in both worlds.
+- **Slices**: the pages are thin — all logic lives in `Features/Admin`
+  (`AdminLoginQuery`, `GetAdminOverviewQuery`, `GetAdminUsersQuery`,
+  `GetAdminUserQuery`, `UpdateUserAccountCommand`, `GetAuditLogQuery`), same
+  CQRS + ADO.NET pattern as the rest of the server.
+- **Capabilities**: server-wide overview, user search with paging, quota
+  changes, enable/disable (revokes all refresh tokens), admin grant/revoke
+  (self-disable/demote blocked), per-user drill-down, audit log browser.
+  Every mutation is antiforgery-protected (Razor Pages default) and audited.
+- **Bootstrap**: `Admin:BootstrapEmail` promotes an existing account at startup
+  (idempotent); `Users.IsAdmin` defaults to 0 and the schema script upgrades
+  older databases in place.
+
 ## Client
 
 ### Engine (`iBackup.Client.Core`)
@@ -157,4 +180,5 @@ rotated refresh tokens are persisted immediately.
   the interface is already stream-based.
 - **Linux/macOS clients**: `iBackup.Client.Core` targets plain `net10.0`;
   only `CredentialStore` (DPAPI) needs a platform alternative.
-- **Web admin**: the API is UI-agnostic; add an admin area + role claims.
+- **Web admin**: implemented — Razor Pages dashboard under `/Admin` (see above);
+  extend it with device management and per-folder retention overrides as needed.

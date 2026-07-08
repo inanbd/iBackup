@@ -1,0 +1,30 @@
+@page
+@model iBackup.Server.Api.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Sign in — iBackup Admin";
+}
+<div style="max-width:360px;margin:10vh auto 0;">
+    <div class="panel">
+        <h1>iBackup Admin</h1>
+        <p class="muted">Sign in with an administrator account.</p>
+        <form method="post">
+            <div style="margin-bottom:10px;">
+                <label>Email<br /><input type="email" asp-for="Email" style="width:100%;" autofocus /></label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>Password<br /><input type="password" asp-for="Password" style="width:100%;" /></label>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label><input type="checkbox" asp-for="RememberMe" /> Keep me signed in</label>
+            </div>
+            @if (Model.Error is not null)
+            {
+                <div class="error">@Model.Error</div>
+            }
+            <button type="submit" class="primary" style="width:100%;">Sign in</button>
+        </form>
+    </div>
+    <p class="muted" style="text-align:center;">
+        The first administrator is promoted via the <code>Admin:BootstrapEmail</code> setting.
+    </p>
+</div>

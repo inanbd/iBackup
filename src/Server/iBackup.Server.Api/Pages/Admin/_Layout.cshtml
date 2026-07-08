@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] ?? "iBackup Admin")</title>
+    <style>
+        :root { --bg:#f3f4f6; --panel:#ffffff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb;
+                --accent:#2563eb; --danger:#dc2626; --ok:#16a34a; --sidebar:#111827; }
+        * { box-sizing:border-box; }
+        body { margin:0; font:14px/1.5 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+        .shell { display:flex; min-height:100vh; }
+        .sidebar { width:210px; background:var(--sidebar); color:#e5e7eb; padding:20px 0; flex-shrink:0; }
+        .sidebar .brand { font-size:19px; font-weight:700; color:#fff; padding:0 18px 20px; }
+        .sidebar a { display:block; padding:10px 18px; color:#e5e7eb; text-decoration:none; }
+        .sidebar a:hover, .sidebar a.active { background:#1f2937; color:#fff; }
+        .sidebar form { margin-top:24px; }
+        .sidebar button { background:none; border:none; color:#9ca3af; padding:10px 18px; cursor:pointer; font:inherit; width:100%; text-align:left; }
+        .sidebar button:hover { color:#fff; }
+        .main { flex:1; padding:28px 32px; max-width:1200px; }
+        h1 { font-size:22px; margin:0 0 18px; }
+        h2 { font-size:15px; margin:24px 0 8px; }
+        .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px; }
+        .tile { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+        .tile .k { color:var(--muted); font-size:12px; }
+        .tile .v { font-size:20px; font-weight:600; margin-top:2px; }
+        .tile .s { color:var(--muted); font-size:12px; margin-top:2px; }
+        .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:20px; }
+        table { width:100%; border-collapse:collapse; background:var(--panel); }
+        th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+        th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+        tr:hover td { background:#f9fafb; }
+        .badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; }
+        .badge.ok { background:#dcfce7; color:#166534; }
+        .badge.off { background:#fee2e2; color:#991b1b; }
+        .badge.admin { background:#dbeafe; color:#1e40af; }
+        input[type=text], input[type=email], input[type=password], input[type=number] {
+            padding:7px 9px; border:1px solid #d1d5db; border-radius:6px; font:inherit; }
+        button, .btn { padding:7px 14px; border-radius:6px; border:1px solid #d1d5db; background:#fff;
+            cursor:pointer; font:inherit; text-decoration:none; color:var(--ink); display:inline-block; }
+        button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+        button.danger { border-color:var(--danger); color:var(--danger); }
+        .error { color:var(--danger); margin:8px 0; }
+        .notice { color:var(--ok); margin:8px 0; }
+        .muted { color:var(--muted); }
+        .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .meter { background:var(--line); border-radius:999px; height:6px; width:120px; overflow:hidden; }
+        .meter > div { background:var(--accent); height:100%; }
+        .pager { margin-top:12px; display:flex; gap:8px; align-items:center; }
+        .inline-form { display:inline; }
+    </style>
+</head>
+<body>
+<div class="shell">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="sidebar">
+            <div class="brand">iBackup Admin</div>
+            <a asp-page="/Admin/Index">Overview</a>
+            <a asp-page="/Admin/Users">Users</a>
+            <a asp-page="/Admin/Audit">Audit log</a>
+            <form method="post" asp-page="/Admin/Logout">
+                <button type="submit">Sign out (@User.Identity.Name)</button>
+            </form>
+        </nav>
+    }
+    <main class="main">
+        @RenderBody()
+    </main>
+</div>
+</body>
+</html>

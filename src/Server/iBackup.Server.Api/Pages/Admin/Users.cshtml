@@ -1,0 +1,95 @@
+@page
+@model iBackup.Server.Api.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Users — iBackup Admin";
+}
+<h1>Users</h1>
+
+<div class="panel">
+    <form method="get" class="row">
+        <input type="text" name="search" value="@Model.Search" placeholder="Search email or name…" style="width:280px;" />
+        <button type="submit" class="primary">Search</button>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <a class="btn" asp-page="/Admin/Users">Clear</a>
+        }
+        <span class="muted">@Model.Users.TotalCount user(s)</span>
+    </form>
+</div>
+
+@if (Model.Notice is not null)
+{
+    <div class="notice">@Model.Notice</div>
+}
+@if (Model.Error is not null)
+{
+    <div class="error">@Model.Error</div>
+}
+
+<table>
+    <thead>
+        <tr>
+            <th>User</th><th>Storage</th><th>Devices</th><th>Files</th>
+            <th>Last backup</th><th>Status</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var u in Model.Users.Items)
+    {
+        <tr>
+            <td>
+                <a asp-page="/Admin/User" asp-route-id="@u.Id"><strong>@u.Email</strong></a><br />
+                <span class="muted">@u.DisplayName · since @u.CreatedAtUtc.ToString("yyyy-MM-dd")</span>
+            </td>
+            <td>
+                @Format.Bytes(u.UsedBytes) / @Format.Bytes(u.QuotaBytes)
+                <div class="meter"><div style="width:@(Format.Percent(u.UsedBytes, u.QuotaBytes))%"></div></div>
+            </td>
+            <td>@u.DeviceCount</td>
+            <td>@u.FileCount</td>
+            <td>@Format.When(u.LastBackupAtUtc)</td>
+            <td>
+                @if (u.IsActive) { <span class="badge ok">active</span> } else { <span class="badge off">disabled</span> }
+                @if (u.IsAdmin) { <span class="badge admin">admin</span> }
+            </td>
+            <td>
+                <form method="post" asp-page-handler="Quota" class="inline-form row" style="margin-bottom:4px;">
+                    <input type="hidden" name="userId" value="@u.Id" />
+                    <input type="number" name="quotaGb" min="1" max="1048576"
+                           value="@((int)(u.QuotaBytes / (1024L * 1024 * 1024)))" style="width:70px;" /> <span class="muted">GB</span>
+                    <button type="submit">Set quota</button>
+                </form>
+                <form method="post" asp-page-handler="ToggleActive" class="inline-form">
+                    <input type="hidden" name="userId" value="@u.Id" />
+                    <input type="hidden" name="isActive" value="@u.IsActive" />
+                    <button type="submit" class="@(u.IsActive ? "danger" : "")">@(u.IsActive ? "Disable" : "Enable")</button>
+                </form>
+                <form method="post" asp-page-handler="ToggleAdmin" class="inline-form">
+                    <input type="hidden" name="userId" value="@u.Id" />
+                    <input type="hidden" name="isAdmin" value="@u.IsAdmin" />
+                    <button type="submit">@(u.IsAdmin ? "Revoke admin" : "Make admin")</button>
+                </form>
+            </td>
+        </tr>
+    }
+    @if (Model.Users.Items.Count == 0)
+    {
+        <tr><td colspan="7" class="muted">No users match.</td></tr>
+    }
+    </tbody>
+</table>
+
+@if (Model.Users.TotalPages > 1)
+{
+    <div class="pager">
+        @if (Model.P > 1)
+        {
+            <a class="btn" asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-p="@(Model.P - 1)">← Previous</a>
+        }
+        <span class="muted">Page @Model.P of @Model.Users.TotalPages</span>
+        @if (Model.P < Model.Users.TotalPages)
+        {
+            <a class="btn" asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-p="@(Model.P + 1)">Next →</a>
+        }
+    </div>
+}

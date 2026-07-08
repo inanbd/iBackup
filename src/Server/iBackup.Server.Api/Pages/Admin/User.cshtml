@@ -1,0 +1,107 @@
+@page "{id:guid}"
+@model iBackup.Server.Api.Pages.Admin.UserModel
+@{
+    var u = Model.Detail.User;
+    ViewData["Title"] = u.Email + " — iBackup Admin";
+}
+<h1>@u.Email</h1>
+<p class="muted">
+    @u.DisplayName · registered @u.CreatedAtUtc.ToString("yyyy-MM-dd") ·
+    @if (u.IsActive) { <span class="badge ok">active</span> } else { <span class="badge off">disabled</span> }
+    @if (u.IsAdmin) { <span class="badge admin">admin</span> }
+</p>
+
+<div class="tiles">
+    <div class="tile">
+        <div class="k">Storage</div>
+        <div class="v">@Format.Bytes(u.UsedBytes)</div>
+        <div class="s">of @Format.Bytes(u.QuotaBytes) (@Format.Percent(u.UsedBytes, u.QuotaBytes)%)</div>
+    </div>
+    <div class="tile">
+        <div class="k">Files</div>
+        <div class="v">@u.FileCount</div>
+    </div>
+    <div class="tile">
+        <div class="k">Devices</div>
+        <div class="v">@u.DeviceCount</div>
+    </div>
+    <div class="tile">
+        <div class="k">Last backup</div>
+        <div class="v" style="font-size:15px;">@Format.When(u.LastBackupAtUtc)</div>
+    </div>
+</div>
+
+<h2>Devices</h2>
+<table>
+    <thead>
+        <tr><th>Name</th><th>OS</th><th>Client</th><th>Last backup</th><th>Last online</th><th>IP</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var d in Model.Detail.Devices)
+    {
+        <tr>
+            <td>@d.DeviceName</td>
+            <td class="muted">@d.OperatingSystem</td>
+            <td>@d.ClientVersion</td>
+            <td>@Format.When(d.LastBackupAtUtc)</td>
+            <td>@Format.When(d.LastOnlineAtUtc)</td>
+            <td class="muted">@d.IpAddress</td>
+            <td>@if (d.IsActive) { <span class="badge ok">active</span> } else { <span class="badge off">disabled</span> }</td>
+        </tr>
+    }
+    @if (Model.Detail.Devices.Count == 0)
+    {
+        <tr><td colspan="7" class="muted">No devices registered.</td></tr>
+    }
+    </tbody>
+</table>
+
+<h2>Recent backup jobs</h2>
+<table>
+    <thead>
+        <tr><th>Started (UTC)</th><th>Device</th><th>Folder</th><th>Type</th><th>Status</th><th>Uploaded</th><th>Failed</th><th>Bytes</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var j in Model.Detail.RecentJobs)
+    {
+        <tr>
+            <td>@j.StartedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@j.DeviceName</td>
+            <td class="muted">@j.FolderPath</td>
+            <td>@j.Type</td>
+            <td>
+                @if (j.Status == BackupJobStatus.Completed) { <span class="badge ok">@j.Status</span> }
+                else if (j.Status == BackupJobStatus.Failed) { <span class="badge off">@j.Status</span> }
+                else { @j.Status }
+            </td>
+            <td>@j.UploadedFiles</td>
+            <td>@j.FailedFiles</td>
+            <td>@Format.Bytes(j.TotalBytes)</td>
+        </tr>
+    }
+    @if (Model.Detail.RecentJobs.Count == 0)
+    {
+        <tr><td colspan="8" class="muted">No backups yet.</td></tr>
+    }
+    </tbody>
+</table>
+
+<h2>Recent activity</h2>
+<table>
+    <thead>
+        <tr><th>Time (UTC)</th><th>Action</th><th>Details</th><th>IP</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var a in Model.Detail.RecentActivity)
+    {
+        <tr>
+            <td>@a.TimestampUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td><code>@a.Action</code></td>
+            <td class="muted">@a.Details</td>
+            <td class="muted">@a.IpAddress</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<p style="margin-top:16px;"><a class="btn" asp-page="/Admin/Users">← Back to users</a></p>

@@ -1,0 +1,67 @@
+@page "/Admin"
+@model iBackup.Server.Api.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Overview — iBackup Admin";
+    var o = Model.Overview;
+}
+<h1>Overview</h1>
+
+<div class="tiles">
+    <div class="tile">
+        <div class="k">Users</div>
+        <div class="v">@o.TotalUsers</div>
+        <div class="s">@o.ActiveUsers active · @o.AdminUsers admins</div>
+    </div>
+    <div class="tile">
+        <div class="k">Storage used</div>
+        <div class="v">@Format.Bytes(o.TotalUsedBytes)</div>
+        <div class="s">of @Format.Bytes(o.TotalQuotaBytes) allocated quota</div>
+    </div>
+    <div class="tile">
+        <div class="k">Stored objects</div>
+        <div class="v">@Format.Bytes(o.TotalStoredBytes)</div>
+        <div class="s">@o.TotalFiles files (deduplicated)</div>
+    </div>
+    <div class="tile">
+        <div class="k">Devices</div>
+        <div class="v">@o.TotalDevices</div>
+        <div class="s">@o.ActiveUploadSessions uploads in flight</div>
+    </div>
+    <div class="tile">
+        <div class="k">Backup jobs (24 h)</div>
+        <div class="v">@o.JobsLast24h</div>
+        <div class="s">
+            @if (o.FailedJobsLast24h > 0)
+            {
+                <span class="badge off">@o.FailedJobsLast24h failed</span>
+            }
+            else
+            {
+                <span class="badge ok">no failures</span>
+            }
+        </div>
+    </div>
+</div>
+
+<h2>Recent activity</h2>
+<table>
+    <thead>
+        <tr><th>Time (UTC)</th><th>Action</th><th>User</th><th>Details</th><th>IP</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var row in o.RecentActivity)
+    {
+        <tr>
+            <td>@row.TimestampUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td><code>@row.Action</code></td>
+            <td>@(row.UserEmail ?? "—")</td>
+            <td class="muted">@row.Details</td>
+            <td class="muted">@row.IpAddress</td>
+        </tr>
+    }
+    @if (o.RecentActivity.Count == 0)
+    {
+        <tr><td colspan="5" class="muted">No activity yet.</td></tr>
+    }
+    </tbody>
+</table>

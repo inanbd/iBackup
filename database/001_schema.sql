@@ -23,10 +23,17 @@ BEGIN
         QuotaBytes      BIGINT           NOT NULL CONSTRAINT DF_Users_Quota DEFAULT (107374182400), -- 100 GB
         UsedBytes       BIGINT           NOT NULL CONSTRAINT DF_Users_Used DEFAULT (0),
         IsActive        BIT              NOT NULL CONSTRAINT DF_Users_Active DEFAULT (1),
+        IsAdmin         BIT              NOT NULL CONSTRAINT DF_Users_Admin DEFAULT (0),
         CreatedAtUtc    DATETIME2(3)     NOT NULL CONSTRAINT DF_Users_Created DEFAULT (SYSUTCDATETIME()),
         UpdatedAtUtc    DATETIME2(3)     NOT NULL CONSTRAINT DF_Users_Updated DEFAULT (SYSUTCDATETIME())
     );
     CREATE UNIQUE INDEX UX_Users_Email ON dbo.Users(Email);
+END;
+
+-- Upgrade path for databases created before the admin UI existed.
+IF COL_LENGTH(N'dbo.Users', N'IsAdmin') IS NULL
+BEGIN
+    ALTER TABLE dbo.Users ADD IsAdmin BIT NOT NULL CONSTRAINT DF_Users_Admin DEFAULT (0);
 END;
 
 ------------------------------------------------------------------------------

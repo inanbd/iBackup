@@ -49,6 +49,13 @@ try
     builder.Services.AddScoped<ICurrentUser, CurrentUser>();
     builder.Services.AddControllers();
 
+    // Admin dashboard (Razor Pages under /Admin, cookie-authenticated).
+    builder.Services.AddRazorPages(options =>
+    {
+        options.Conventions.AuthorizeFolder("/Admin", AdminAuth.Policy);
+        options.Conventions.AllowAnonymousToPage("/Admin/Login");
+    });
+
     // JWT bearer authentication. Validation parameters are bound from JwtOptions
     // at runtime (not from a build-time configuration snapshot) so the token
     // service and the validator always agree on the key - including under
@@ -56,7 +63,18 @@ try
     // Program.cs has executed.
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer();
+        .AddJwtBearer()
+        .AddCookie(AdminAuth.Scheme, options =>
+        {
+            options.Cookie.Name = "ibackup.admin";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.LoginPath = "/Admin/Login";
+            options.AccessDeniedPath = "/Admin/Login";
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
+        });
     builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
         .Configure<IOptions<JwtOptions>>((options, jwtOptions) =>
         {
@@ -79,7 +97,13 @@ try
                 NameClaimType = "sub"
             };
         });
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy(AdminAuth.Policy, policy => policy
+            .AddAuthenticationSchemes(AdminAuth.Scheme)
+            .RequireAuthenticatedUser()
+            .RequireRole(AdminAuth.Role));
+    });
 
     // Rate limiting: modest global limit per client IP plus a strict window for auth endpoints.
     var globalPermit = builder.Configuration.GetValue("RateLimiting:GlobalPermitPerMinute", 1200);
@@ -159,6 +183,8 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    // /Admin resolves to Pages/Admin/Index.cshtml.
+    app.MapRazorPages();
 
     // Optional schema bootstrap (Database:InitializeOnStartup).
     using (var scope = app.Services.CreateScope())
