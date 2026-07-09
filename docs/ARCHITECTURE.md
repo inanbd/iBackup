@@ -108,9 +108,10 @@ Server-side UI exists only as an admin dashboard under `/Admin`
   works identically in both worlds.
 - **Slices**: the pages are thin — all logic lives in `Features/Admin`
   (`AdminLoginQuery`, `GetAdminOverviewQuery`, `GetAdminUsersQuery`,
-  `GetAdminUserQuery`, `UpdateUserAccountCommand`, `GetAuditLogQuery`), same
-  CQRS + ADO.NET pattern as the rest of the server.
-- **Capabilities**: server-wide overview, user search with paging, quota
+  `GetAdminUserQuery`, `CreateUserCommand`, `UpdateUserAccountCommand`,
+  `GetAuditLogQuery`), same CQRS + ADO.NET pattern as the rest of the server.
+- **Capabilities**: server-wide overview, create users (custom quota + admin
+  flag, BCrypt-hashed like self-registration), user search with paging, quota
   changes, enable/disable (revokes all refresh tokens), admin grant/revoke
   (self-disable/demote blocked), per-user drill-down, audit log browser.
   Every mutation is antiforgery-protected (Razor Pages default) and audited.

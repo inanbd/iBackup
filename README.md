@@ -53,9 +53,10 @@ The server hosts a Razor Pages **admin dashboard** at `/Admin` (server-side UI i
 admin-only; end users work through the desktop client). It is cookie-authenticated,
 separate from the JWT scheme the API uses, and restricted to accounts with the
 `IsAdmin` flag. Pages: server-wide overview (users, storage, jobs, in-flight
-uploads, activity feed), user management (search, per-user quotas,
-enable/disable with session revocation, grant/revoke admin), per-user detail
-(devices, job history, audit trail), and a filterable audit log browser.
+uploads, activity feed), user management (**create users** with an optional
+custom quota and admin flag, search, per-user quotas, enable/disable with
+session revocation, grant/revoke admin), per-user detail (devices, job history,
+audit trail), and a filterable audit log browser.
 
 Create the first administrator one of two ways:
 

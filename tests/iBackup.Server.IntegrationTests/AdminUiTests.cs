@@ -71,6 +71,37 @@ public class AdminUiTests : IClassFixture<ApiFixture>
         Assert.Contains(adminEmail, usersHtml);
         Assert.Contains(plainEmail, usersHtml);
 
+        // --- create a new user through the admin form
+        var createdEmail = $"new-{Guid.NewGuid():N}@example.com";
+        var created = await PostFormAsync(client, "/Admin/Users?handler=Create", new()
+        {
+            ["NewUser.Email"] = createdEmail,
+            ["NewUser.DisplayName"] = "Created In Panel",
+            ["NewUser.Password"] = "created-in-panel-1",
+            ["NewUser.QuotaGb"] = "10",
+            ["NewUser.IsAdmin"] = "false"
+        }, tokenPagePath: "/Admin/Users");
+        Assert.Contains($"User {createdEmail} created", await created.Content.ReadAsStringAsync());
+
+        // the created account can authenticate against the API with the given quota
+        var createdClient = _fixture.CreateClient();
+        var createdLogin = await createdClient.PostAsJsonAsync("api/auth/login",
+            new LoginRequest(createdEmail, "created-in-panel-1"));
+        createdLogin.EnsureSuccessStatusCode();
+        var createdTokens = (await createdLogin.Content.ReadFromJsonAsync<AuthTokensResponse>())!;
+        createdClient.DefaultRequestHeaders.Authorization = new("Bearer", createdTokens.AccessToken);
+        var profile = (await createdClient.GetFromJsonAsync<ProfileResponse>("api/client/profile"))!;
+        Assert.Equal(10L * 1024 * 1024 * 1024, profile.QuotaBytes);
+
+        // duplicate email is rejected
+        var duplicate = await PostFormAsync(client, "/Admin/Users?handler=Create", new()
+        {
+            ["NewUser.Email"] = createdEmail,
+            ["NewUser.Password"] = "another-password-1",
+            ["NewUser.IsAdmin"] = "false"
+        }, tokenPagePath: "/Admin/Users");
+        Assert.Contains("already exists", await duplicate.Content.ReadAsStringAsync());
+
         // --- change the plain user's quota through the form
         var quota = await PostFormAsync(client, "/Admin/Users?handler=Quota",
             new() { ["userId"] = plainUserId.ToString(), ["quotaGb"] = "42" }, tokenPagePath: "/Admin/Users");

@@ -29,6 +29,33 @@ public class RegisterUserValidatorTests
     }
 }
 
+public class CreateUserValidatorTests
+{
+    private readonly iBackup.Server.Application.Features.Admin.CreateUserValidator _validator = new();
+
+    private static iBackup.Server.Application.Features.Admin.CreateUserCommand Valid()
+        => new("new@example.com", "long-enough-password", "New User", QuotaBytes: 50L * 1024 * 1024 * 1024, IsAdmin: false);
+
+    [Fact]
+    public void Valid_command_passes()
+        => Assert.True(_validator.Validate(Valid()).IsValid);
+
+    [Fact]
+    public void Null_quota_is_allowed()
+        => Assert.True(_validator.Validate(Valid() with { QuotaBytes = null }).IsValid);
+
+    [Theory]
+    [InlineData("not-an-email", "long-enough-password", "Name")]
+    [InlineData("new@example.com", "short", "Name")]
+    [InlineData("new@example.com", "long-enough-password", "")]
+    public void Invalid_command_fails(string email, string password, string displayName)
+        => Assert.False(_validator.Validate(Valid() with { Email = email, Password = password, DisplayName = displayName }).IsValid);
+
+    [Fact]
+    public void Non_positive_quota_fails()
+        => Assert.False(_validator.Validate(Valid() with { QuotaBytes = 0 }).IsValid);
+}
+
 public class BeginFileUploadValidatorTests
 {
     private readonly BeginFileUploadValidator _validator = new();

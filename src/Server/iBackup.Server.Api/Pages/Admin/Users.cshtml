@@ -17,6 +17,24 @@
     </form>
 </div>
 
+<details class="panel" @(Model.ShowCreateForm ? "open" : "")>
+    <summary style="cursor:pointer;font-weight:600;">+ Add user</summary>
+    <form method="post" asp-page-handler="Create" style="margin-top:12px;">
+        <div class="row" style="align-items:flex-end;">
+            <label>Email<br /><input type="email" asp-for="NewUser.Email" style="width:240px;" required /></label>
+            <label>Display name<br /><input type="text" asp-for="NewUser.DisplayName" style="width:180px;" placeholder="(optional)" /></label>
+            <label>Password<br /><input type="text" asp-for="NewUser.Password" style="width:200px;" required minlength="10" /></label>
+            <label>Quota (GB)<br /><input type="number" asp-for="NewUser.QuotaGb" min="1" max="1048576" style="width:90px;" placeholder="100" /></label>
+            <label style="padding-bottom:8px;"><input type="checkbox" asp-for="NewUser.IsAdmin" /> Administrator</label>
+            <button type="submit" class="primary">Create user</button>
+        </div>
+        <div class="muted" style="margin-top:6px;">
+            Password must be 10–128 characters. The new account can sign in immediately;
+            it derives its backup encryption key on first sign-in from the desktop client.
+        </div>
+    </form>
+</details>
+
 @if (Model.Notice is not null)
 {
     <div class="notice">@Model.Notice</div>
