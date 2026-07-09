@@ -19,11 +19,6 @@
                 <PasswordBox x:Name="PasswordInput" Margin="0,0,0,12" Padding="6"
                              PasswordChanged="OnPasswordChanged" />
 
-                <StackPanel Visibility="{Binding IsRegisterMode, Converter={x:Static views:Converters.BoolToVisibility}}">
-                    <TextBlock Text="Display name" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" Padding="6" />
-                </StackPanel>
-
                 <TextBlock Text="{Binding Error}" Foreground="#DC2626" TextWrapping="Wrap" Margin="0,0,0,8" />
 
                 <Button Content="Sign in" Command="{Binding SignInCommand}"
@@ -31,9 +26,9 @@
                         Background="{StaticResource AccentBrush}" Foreground="White"
                         Padding="0,10" BorderThickness="0" FontSize="14" />
 
-                <Button Content="Need an account? Register" Command="{Binding ToggleModeCommand}"
-                        Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentBrush}"
-                        Margin="0,12,0,0" Cursor="Hand" />
+                <TextBlock Text="Accounts are created by your administrator."
+                           Foreground="#6B7280" FontSize="12" TextAlignment="Center"
+                           TextWrapping="Wrap" Margin="0,12,0,0" />
             </StackPanel>
         </Border>
     </Grid>

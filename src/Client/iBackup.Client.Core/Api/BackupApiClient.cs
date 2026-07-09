@@ -39,9 +39,8 @@ public sealed class BackupApiClient
         => _http.BaseAddress = new Uri(serverUrl.TrimEnd('/') + "/", UriKind.Absolute);
 
     // ------------------------------------------------------------------ auth
-
-    public async Task<RegisterUserResponse> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
-        => await PostAnonymousAsync<RegisterUserRequest, RegisterUserResponse>("api/auth/register", request, ct);
+    // No account creation from the client: users are provisioned by an
+    // administrator via the server admin dashboard. The client only signs in.
 
     public async Task<AuthTokensResponse> LoginAsync(LoginRequest request, CancellationToken ct)
     {

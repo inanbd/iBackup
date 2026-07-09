@@ -4,6 +4,10 @@ using iBackup.Client.Core.Api;
 
 namespace iBackup.Client.App.ViewModels;
 
+/// <summary>
+/// Sign-in only. Accounts are provisioned by an administrator (server admin
+/// dashboard); the client does not offer self-registration.
+/// </summary>
 public partial class LoginViewModel : ObservableObject
 {
     private readonly AuthService _auth;
@@ -19,16 +23,10 @@ public partial class LoginViewModel : ObservableObject
     private string _password = string.Empty;
 
     [ObservableProperty]
-    private string _displayName = string.Empty;
-
-    [ObservableProperty]
     private string? _error;
 
     [ObservableProperty]
     private bool _isBusy;
-
-    [ObservableProperty]
-    private bool _isRegisterMode;
 
     public LoginViewModel(AuthService auth, IServiceProvider services)
     {
@@ -44,18 +42,13 @@ public partial class LoginViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ToggleMode() => IsRegisterMode = !IsRegisterMode;
-
-    [RelayCommand]
     private async Task SignIn()
     {
         Error = null;
         IsBusy = true;
         try
         {
-            var tokens = IsRegisterMode
-                ? await _auth.RegisterAndLoginAsync(ServerUrl, Email, Password, string.IsNullOrWhiteSpace(DisplayName) ? Email : DisplayName, CancellationToken.None)
-                : await _auth.LoginAsync(ServerUrl, Email, Password, CancellationToken.None);
+            var tokens = await _auth.LoginAsync(ServerUrl, Email, Password, CancellationToken.None);
 
             Password = string.Empty;
             var main = (MainViewModel)_services.GetService(typeof(MainViewModel))!;

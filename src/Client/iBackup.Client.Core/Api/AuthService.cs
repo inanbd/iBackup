@@ -37,14 +37,8 @@ public sealed class AuthService
 
     public StoredCredentials? PersistedCredentials => _credentials.Load();
 
-    public async Task<AuthTokensResponse> RegisterAndLoginAsync(
-        string serverUrl, string email, string password, string displayName, CancellationToken ct)
-    {
-        _api.ConfigureServer(serverUrl);
-        await _api.RegisterAsync(new RegisterUserRequest(email, password, displayName), ct);
-        return await LoginAsync(serverUrl, email, password, ct);
-    }
-
+    // Accounts are provisioned by an administrator via the server admin dashboard.
+    // The client only signs in; it does not create accounts.
     public async Task<AuthTokensResponse> LoginAsync(string serverUrl, string email, string password, CancellationToken ct)
     {
         _api.ConfigureServer(serverUrl);
