@@ -111,10 +111,13 @@ Server-side UI exists only as an admin dashboard under `/Admin`
   `GetAdminUserQuery`, `CreateUserCommand`, `UpdateUserAccountCommand`,
   `GetAuditLogQuery`), same CQRS + ADO.NET pattern as the rest of the server.
 - **Capabilities**: server-wide overview, create users (custom quota + admin
-  flag, BCrypt-hashed like self-registration), user search with paging, quota
-  changes, enable/disable (revokes all refresh tokens), admin grant/revoke
+  flag, BCrypt-hashed passwords), user search with paging, quota changes,
+  enable/disable (revokes all refresh tokens), admin grant/revoke
   (self-disable/demote blocked), per-user drill-down, audit log browser.
   Every mutation is antiforgery-protected (Razor Pages default) and audited.
+- **Account creation is admin-only**: there is no public registration endpoint.
+  Users are created here (`CreateUserCommand`); the first admin comes from the
+  bootstrap setting or the seed script. The desktop client only signs in.
 - **Bootstrap**: `Admin:BootstrapEmail` promotes an existing account at startup
   (idempotent); `Users.IsAdmin` defaults to 0 and the schema script upgrades
   older databases in place.

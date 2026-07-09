@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using iBackup.Shared.Contracts;
-using Microsoft.Data.SqlClient;
 using Xunit;
 
 namespace iBackup.Server.IntegrationTests;
@@ -33,22 +32,12 @@ public class AdminUiTests : IClassFixture<ApiFixture>
 
         var client = _fixture.CreateClient(); // handles cookies + redirects
 
-        // --- create an admin (register via API, promote via SQL) and a plain user
+        // --- seed an admin and a plain user (account creation is admin-only)
         var adminEmail = $"adm-{Guid.NewGuid():N}@example.com";
         var plainEmail = $"usr-{Guid.NewGuid():N}@example.com";
         const string password = "admin-ui-password-1";
-        await client.PostAsJsonAsync("api/auth/register", new RegisterUserRequest(adminEmail, password, "Admin"));
-        var plainUserId = (await (await client.PostAsJsonAsync("api/auth/register",
-            new RegisterUserRequest(plainEmail, password, "Plain"))).Content.ReadFromJsonAsync<RegisterUserResponse>())!.UserId;
-
-        await using (var connection = new SqlConnection(ApiFixture.ConnectionString))
-        {
-            await connection.OpenAsync();
-            await using var promote = connection.CreateCommand();
-            promote.CommandText = "UPDATE dbo.Users SET IsAdmin = 1 WHERE Email = @Email;";
-            promote.Parameters.AddWithValue("@Email", adminEmail);
-            Assert.Equal(1, await promote.ExecuteNonQueryAsync());
-        }
+        await TestAccounts.CreateAsync(adminEmail, password, isAdmin: true, displayName: "Admin");
+        var plainUserId = await TestAccounts.CreateAsync(plainEmail, password, displayName: "Plain");
 
         // --- anonymous access is pushed to the login page
         var anonymous = await client.GetAsync("/Admin/Users");

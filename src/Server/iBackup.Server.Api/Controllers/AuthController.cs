@@ -19,12 +19,9 @@ public sealed class AuthController : ControllerBase
         _sender = sender;
     }
 
-    /// <summary>Creates a new user account.</summary>
-    [HttpPost("register")]
-    [AllowAnonymous]
-    [ProducesResponseType<RegisterUserResponse>(StatusCodes.Status200OK)]
-    public async Task<RegisterUserResponse> Register(RegisterUserRequest request, CancellationToken ct)
-        => await _sender.Send(new RegisterUserCommand(request.Email, request.Password, request.DisplayName), ct);
+    // Account creation is admin-only: there is no public self-registration.
+    // Administrators create users via the admin dashboard (/Admin), and the
+    // first admin is provisioned by the bootstrap setting or the seed script.
 
     /// <summary>Verifies credentials and issues an access + refresh token pair.</summary>
     [HttpPost("login")]

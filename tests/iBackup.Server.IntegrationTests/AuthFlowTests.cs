@@ -27,15 +27,8 @@ public class AuthFlowTests : IClassFixture<ApiFixture>
         var email = $"it-{Guid.NewGuid():N}@example.com";
         const string password = "integration-password-1";
 
-        // Register
-        var register = await client.PostAsJsonAsync("api/auth/register",
-            new RegisterUserRequest(email, password, "Integration User"));
-        register.EnsureSuccessStatusCode();
-
-        // Duplicate registration conflicts
-        var duplicate = await client.PostAsJsonAsync("api/auth/register",
-            new RegisterUserRequest(email, password, "Integration User"));
-        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        // Account is provisioned by an admin (seeded here); there is no public registration.
+        await TestAccounts.CreateAsync(email, password, displayName: "Integration User");
 
         // Login
         var login = await client.PostAsJsonAsync("api/auth/login",
@@ -82,5 +75,20 @@ public class AuthFlowTests : IClassFixture<ApiFixture>
         var client = _fixture.CreateClient();
         var response = await client.GetAsync("api/dashboard");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Public_registration_endpoint_does_not_exist()
+    {
+        if (!ApiFixture.IsAvailable)
+        {
+            return;
+        }
+
+        // Account creation is admin-only; the old public endpoint must be gone.
+        var client = _fixture.CreateClient();
+        var response = await client.PostAsJsonAsync("api/auth/register",
+            new { Email = $"nope-{Guid.NewGuid():N}@example.com", Password = "should-not-work-1", DisplayName = "Nope" });
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

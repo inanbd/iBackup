@@ -37,7 +37,7 @@ public class ConcurrencyTests : IClassFixture<ApiFixture>
             client.Timeout = TimeSpan.FromMinutes(5);
 
             var email = $"cc{i}-{Guid.NewGuid():N}@example.com";
-            await client.PostAsJsonAsync("api/auth/register", new RegisterUserRequest(email, "concurrency-pw-1", $"User {i}"));
+            await TestAccounts.CreateAsync(email, "concurrency-pw-1", displayName: $"User {i}");
             var login = await client.PostAsJsonAsync("api/auth/login",
                 new LoginRequest(email, "concurrency-pw-1", new DeviceInfo($"CC {i}", "TestOS", "1.0.0")));
             var tokens = (await login.Content.ReadFromJsonAsync<AuthTokensResponse>())!;

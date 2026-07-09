@@ -1,33 +1,9 @@
-using iBackup.Server.Application.Features.Auth;
 using iBackup.Server.Application.Features.Backups;
 using iBackup.Shared;
 using iBackup.Shared.Contracts;
 using Xunit;
 
 namespace iBackup.Server.UnitTests;
-
-public class RegisterUserValidatorTests
-{
-    private readonly RegisterUserValidator _validator = new();
-
-    [Fact]
-    public void Valid_registration_passes()
-    {
-        var result = _validator.Validate(new RegisterUserCommand("user@example.com", "long-enough-password", "User"));
-        Assert.True(result.IsValid);
-    }
-
-    [Theory]
-    [InlineData("not-an-email", "long-enough-password", "User")]
-    [InlineData("user@example.com", "short", "User")]
-    [InlineData("user@example.com", "long-enough-password", "")]
-    [InlineData("", "long-enough-password", "User")]
-    public void Invalid_registration_fails(string email, string password, string displayName)
-    {
-        var result = _validator.Validate(new RegisterUserCommand(email, password, displayName));
-        Assert.False(result.IsValid);
-    }
-}
 
 public class CreateUserValidatorTests
 {

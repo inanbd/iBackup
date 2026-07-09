@@ -98,7 +98,8 @@ cd src/Client/iBackup.Client.App
 dotnet run
 ```
 
-1. Enter the server URL, register or sign in.
+1. Enter the server URL and sign in. Accounts are created by an administrator
+   (see the admin dashboard below); the client does not self-register.
 2. Add backup folders, pick schedules, exclusions and retention.
 3. Backups run in the background; close the app or install the service for unattended runs:
 
@@ -151,8 +152,9 @@ sign in once with the app first.
 
 ## API surface
 
-`POST /api/auth/register|login|refresh|logout` ·
-`POST /api/client/register` · `GET /api/client/profile` ·
+`POST /api/auth/login|refresh|logout` (no public registration — accounts are
+admin-created) ·
+`POST /api/client/register` (device registration) · `GET /api/client/profile` ·
 `GET|POST|PUT /api/folders` · `DELETE /api/folders/{id}` ·
 `POST /api/backup/start|upload|chunk|delete-file|rename-file|finish` · `GET /api/backup/history` ·
 `GET /api/restore/files` · `POST /api/restore` · `GET /api/restore/download/{versionId}` ·

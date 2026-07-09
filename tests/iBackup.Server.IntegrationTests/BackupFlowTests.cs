@@ -33,7 +33,7 @@ public class BackupFlowTests : IClassFixture<ApiFixture>
 
         // --- register + login
         var email = $"bk-{Guid.NewGuid():N}@example.com";
-        await client.PostAsJsonAsync("api/auth/register", new RegisterUserRequest(email, "backup-password-1", "Backup User"));
+        await TestAccounts.CreateAsync(email, "backup-password-1", displayName: "Backup User");
         var login = await client.PostAsJsonAsync("api/auth/login",
             new LoginRequest(email, "backup-password-1", new DeviceInfo("BK Device", "TestOS", "1.0.0")));
         var tokens = (await login.Content.ReadFromJsonAsync<AuthTokensResponse>())!;
@@ -126,7 +126,7 @@ public class BackupFlowTests : IClassFixture<ApiFixture>
 
         var client = _fixture.CreateClient();
         var email = $"rs-{Guid.NewGuid():N}@example.com";
-        await client.PostAsJsonAsync("api/auth/register", new RegisterUserRequest(email, "resume-password-1", "Resume User"));
+        await TestAccounts.CreateAsync(email, "resume-password-1", displayName: "Resume User");
         var login = await client.PostAsJsonAsync("api/auth/login",
             new LoginRequest(email, "resume-password-1", new DeviceInfo("RS Device", "TestOS", "1.0.0")));
         var tokens = (await login.Content.ReadFromJsonAsync<AuthTokensResponse>())!;

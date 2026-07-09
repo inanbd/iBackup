@@ -3,10 +3,8 @@ namespace iBackup.Shared.Contracts;
 /// <summary>Basic information a client reports about the device it runs on.</summary>
 public sealed record DeviceInfo(string DeviceName, string OperatingSystem, string ClientVersion);
 
-/// <summary>Request to create a new user account.</summary>
-public sealed record RegisterUserRequest(string Email, string Password, string DisplayName);
-
-public sealed record RegisterUserResponse(Guid UserId, string Email);
+// Account creation is admin-only (server admin dashboard / seed script); there
+// is no public registration contract or endpoint.
 
 /// <summary>
 /// Login request. When <paramref name="Device"/> is supplied the server registers
