@@ -44,10 +44,11 @@ public sealed class CurrentUser : ICurrentUser
             {
                 return null;
             }
-            var forwarded = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(forwarded))
+            // Use the IP the filter middleware resolved and stashed, so audit and
+            // login-attempt records match what access control actually enforced.
+            if (context.Items.TryGetValue(ClientIp.ItemKey, out var stashed))
             {
-                return forwarded.Split(',')[0].Trim();
+                return stashed as string;
             }
             return context.Connection.RemoteIpAddress?.ToString();
         }

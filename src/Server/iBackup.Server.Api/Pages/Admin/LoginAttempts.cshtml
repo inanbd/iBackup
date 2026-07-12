@@ -1,0 +1,62 @@
+@page
+@model iBackup.Server.Api.Pages.Admin.LoginAttemptsModel
+@{
+    ViewData["Title"] = "Login attempts — iBackup Admin";
+}
+<h1>Login attempts</h1>
+
+<div class="panel">
+    <form method="get" class="row">
+        <input type="text" name="ip" value="@Model.Ip" placeholder="Filter by IP…" style="width:160px;" />
+        <input type="text" name="email" value="@Model.Email" placeholder="Filter by email…" style="width:200px;" />
+        <label><input type="checkbox" name="failuresOnly" value="true" @(Model.FailuresOnly ? "checked" : "") /> Failures only</label>
+        <button type="submit" class="primary">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Ip) || !string.IsNullOrEmpty(Model.Email) || Model.FailuresOnly)
+        {
+            <a class="btn" asp-page="/Admin/LoginAttempts">Clear</a>
+        }
+        <span class="muted">@Model.Attempts.TotalCount attempt(s)</span>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr><th>Time (UTC)</th><th>Result</th><th>Email</th><th>IP</th><th>Source</th><th>Reason</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var a in Model.Attempts.Items)
+    {
+        <tr>
+            <td>@a.TimestampUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td>
+                @if (a.Success) { <span class="badge ok">success</span> } else { <span class="badge off">failed</span> }
+            </td>
+            <td>@a.Email</td>
+            <td><code>@a.IpAddress</code></td>
+            <td class="muted">@a.Source</td>
+            <td class="muted">@a.Reason</td>
+        </tr>
+    }
+    @if (Model.Attempts.Items.Count == 0)
+    {
+        <tr><td colspan="6" class="muted">No login attempts match.</td></tr>
+    }
+    </tbody>
+</table>
+
+@if (Model.Attempts.TotalPages > 1)
+{
+    <div class="pager">
+        @if (Model.P > 1)
+        {
+            <a class="btn" asp-page="/Admin/LoginAttempts" asp-route-ip="@Model.Ip" asp-route-email="@Model.Email"
+               asp-route-failuresOnly="@Model.FailuresOnly" asp-route-p="@(Model.P - 1)">← Previous</a>
+        }
+        <span class="muted">Page @Model.P of @Model.Attempts.TotalPages</span>
+        @if (Model.P < Model.Attempts.TotalPages)
+        {
+            <a class="btn" asp-page="/Admin/LoginAttempts" asp-route-ip="@Model.Ip" asp-route-email="@Model.Email"
+               asp-route-failuresOnly="@Model.FailuresOnly" asp-route-p="@(Model.P + 1)">Next →</a>
+        }
+    </div>
+}

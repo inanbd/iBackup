@@ -29,17 +29,20 @@ internal sealed class AdminLoginHandler : IRequestHandler<AdminLoginQuery, Admin
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
+    private readonly IIpAccessControl _ipAccess;
 
     public AdminLoginHandler(
         ISqlConnectionFactory connections,
         IPasswordHasher passwordHasher,
         IAuditLogger audit,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IIpAccessControl ipAccess)
     {
         _connections = connections;
         _passwordHasher = passwordHasher;
         _audit = audit;
         _currentUser = currentUser;
+        _ipAccess = ipAccess;
     }
 
     public async Task<AdminIdentity> Handle(AdminLoginQuery request, CancellationToken ct)
@@ -78,17 +81,23 @@ internal sealed class AdminLoginHandler : IRequestHandler<AdminLoginQuery, Admin
         {
             await _audit.LogAsync(passwordHash is null ? null : userId, null, "admin.login_failed",
                 $"Failed admin login for {email}", ip, ct);
+            await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+                email, ip, Success: false, "Invalid email or password", passwordHash is null ? null : userId, "admin"), ct);
             throw AppException.Unauthorized("Invalid email or password.");
         }
 
         if (!isActive || !isAdmin)
         {
-            await _audit.LogAsync(userId, null, "admin.login_denied",
-                isAdmin ? "Account disabled" : "Account is not an administrator", ip, ct);
+            var reason = isAdmin ? "Account disabled" : "Account is not an administrator";
+            await _audit.LogAsync(userId, null, "admin.login_denied", reason, ip, ct);
+            await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+                email, ip, Success: false, reason, userId, "admin"), ct);
             throw AppException.Forbidden("This account does not have administrator access.");
         }
 
         await _audit.LogAsync(userId, null, "admin.login", $"Admin sign-in from {ip ?? "unknown"}", ip, ct);
+        await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+            email, ip, Success: true, "Admin sign-in", userId, "admin"), ct);
         return new AdminIdentity(userId, email, displayName);
     }
 }

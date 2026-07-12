@@ -179,6 +179,9 @@ try
     }
 
     app.UseHttpsRedirection();
+    // Default-deny IP filtering: runs before rate limiting and auth so blocked
+    // IPs are rejected as early and cheaply as possible.
+    app.UseMiddleware<IpAccessMiddleware>();
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();

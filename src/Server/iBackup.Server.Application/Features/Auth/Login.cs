@@ -36,19 +36,22 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, AuthTokensRes
     private readonly IJwtTokenService _tokens;
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
+    private readonly IIpAccessControl _ipAccess;
 
     public LoginHandler(
         ISqlConnectionFactory connections,
         IPasswordHasher passwordHasher,
         IJwtTokenService tokens,
         IAuditLogger audit,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IIpAccessControl ipAccess)
     {
         _connections = connections;
         _passwordHasher = passwordHasher;
         _tokens = tokens;
         _audit = audit;
         _currentUser = currentUser;
+        _ipAccess = ipAccess;
     }
 
     public async Task<AuthTokensResponse> Handle(LoginCommand request, CancellationToken ct)
@@ -84,11 +87,15 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, AuthTokensRes
         if (passwordHash is null || !_passwordHasher.Verify(request.Password, passwordHash))
         {
             await _audit.LogAsync(passwordHash is null ? null : userId, null, "auth.login_failed", $"Failed login for {email}", ip, ct);
+            await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+                email, ip, Success: false, "Invalid email or password", passwordHash is null ? null : userId, "api"), ct);
             throw AppException.Unauthorized("Invalid email or password.");
         }
 
         if (!isActive)
         {
+            await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+                email, ip, Success: false, "Account disabled", userId, "api"), ct);
             throw AppException.Forbidden("This account is disabled.");
         }
 
@@ -100,6 +107,8 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, AuthTokensRes
         await RefreshTokenData.InsertAsync(connection, userId, deviceId, _tokens.HashToken(refreshToken), refreshExpires, ip, ct);
 
         await _audit.LogAsync(userId, deviceId, "auth.login", $"Login from {ip ?? "unknown"}", ip, ct);
+        await _ipAccess.RecordLoginAttemptAsync(new LoginAttemptRecord(
+            email, ip, Success: true, "Login succeeded", userId, "api"), ct);
 
         return new AuthTokensResponse(
             userId, email, displayName, deviceId,

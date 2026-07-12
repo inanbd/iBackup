@@ -1,0 +1,95 @@
+@page
+@model iBackup.Server.Api.Pages.Admin.IpAccessModel
+@{
+    ViewData["Title"] = "IP access — iBackup Admin";
+}
+<h1>IP access control</h1>
+
+<div class="panel" style="border-left:3px solid var(--accent);">
+    <strong>Default-deny.</strong> Only the local host and whitelisted IPs may connect;
+    every other address is blocked. Use <code>*</code> to whitelist all addresses.
+    Blacklist entries (including the automatic ones added after repeated failed
+    logins) always win over the whitelist. The local host can never be locked out.
+</div>
+
+@if (Model.Notice is not null)
+{
+    <div class="notice">@Model.Notice</div>
+}
+@if (Model.Error is not null)
+{
+    <div class="error">@Model.Error</div>
+}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div>
+        <h2>Whitelist (allowed)</h2>
+        <div class="panel">
+            <form method="post" asp-page-handler="AddWhitelist" class="row">
+                <input type="text" name="ipAddress" placeholder="IP address or *" style="width:150px;" required />
+                <input type="text" name="reason" placeholder="Reason (optional)" style="width:150px;" />
+                <button type="submit" class="primary">Add</button>
+            </form>
+        </div>
+        <table>
+            <thead><tr><th>IP</th><th>Reason</th><th>Added</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.Rules.Whitelist)
+            {
+                <tr>
+                    <td><code>@r.IpAddress</code></td>
+                    <td class="muted">@r.Reason</td>
+                    <td class="muted">@r.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" class="inline-form">
+                            <input type="hidden" name="ruleId" value="@r.Id" />
+                            <button type="submit">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (Model.Rules.Whitelist.Count == 0)
+            {
+                <tr><td colspan="4" class="muted">No whitelist entries. Only localhost can connect.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Blacklist (blocked)</h2>
+        <div class="panel">
+            <form method="post" asp-page-handler="AddBlacklist" class="row">
+                <input type="text" name="ipAddress" placeholder="IP address or *" style="width:150px;" required />
+                <input type="text" name="reason" placeholder="Reason (optional)" style="width:150px;" />
+                <button type="submit" class="primary">Add</button>
+            </form>
+        </div>
+        <table>
+            <thead><tr><th>IP</th><th>Reason</th><th>Added</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.Rules.Blacklist)
+            {
+                <tr>
+                    <td><code>@r.IpAddress</code></td>
+                    <td class="muted">
+                        @r.Reason
+                        @if (r.IsAuto) { <span class="badge off">auto</span> }
+                    </td>
+                    <td class="muted">@r.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" class="inline-form">
+                            <input type="hidden" name="ruleId" value="@r.Id" />
+                            <button type="submit">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (Model.Rules.Blacklist.Count == 0)
+            {
+                <tr><td colspan="4" class="muted">No blacklist entries.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

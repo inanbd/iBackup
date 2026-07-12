@@ -86,6 +86,35 @@ Create the first administrator one of two ways:
 Further admins are promoted from the Users page. Admins cannot disable or
 demote their own account.
 
+### IP access control
+
+The server enforces a **default-deny IP policy**: only the local host and
+whitelisted IPs may connect — every other address gets `403`. Manage it on the
+admin dashboard:
+
+- **IP access** page — maintain the whitelist and blacklist. Use `*` to
+  whitelist (or blacklist) all addresses. Blacklist entries always win over the
+  whitelist, and the local host can never be locked out.
+- **Login attempts** page — every authentication attempt (API and dashboard)
+  with its IP and outcome, filterable by IP/email/failures.
+- **Auto-blacklist** — 5 failed logins from one IP (configurable) automatically
+  add it to the blacklist.
+
+Configuration (`IpAccessControl` section):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Enabled` | `true` | Master switch for IP filtering |
+| `TrustForwardedFor` | `false` | Take client IP from `X-Forwarded-For` — enable **only** behind a trusted proxy |
+| `MaxFailedAttempts` | `5` | Failed logins from an IP that trigger auto-blacklist |
+| `FailedAttemptWindowMinutes` | `60` | Window over which failures are counted |
+| `CacheSeconds` | `15` | Rule-cache TTL (admin changes apply immediately regardless) |
+
+> On a fresh install every non-local IP is blocked, so sign in from the server
+> host first and whitelist your address (or `*`) before connecting clients
+> remotely. Behind a reverse proxy, enable `TrustForwardedFor` so the real
+> client IP — not the proxy's — is evaluated.
+
 **Before production**: set a strong `Jwt:SigningKey` (≥ 32 bytes) and the
 `ConnectionStrings:Default` via environment variables or a secret store, put the
 API behind HTTPS (HSTS is enabled outside Development), and point

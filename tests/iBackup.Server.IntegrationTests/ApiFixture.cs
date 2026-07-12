@@ -35,7 +35,15 @@ public sealed class ApiFixture : WebApplicationFactory<Program>
                 ["Database:InitializeOnStartup"] = "true",
                 ["Database:ScriptsPath"] = FindScriptsPath(),
                 ["RateLimiting:AuthPermitPerMinute"] = "1000",
-                ["RateLimiting:GlobalPermitPerMinute"] = "100000"
+                ["RateLimiting:GlobalPermitPerMinute"] = "100000",
+                // Enforce IP filtering in tests. TrustForwardedFor lets a test
+                // simulate a client IP via the X-Forwarded-For header; requests
+                // without it resolve to the (loopback/unknown) test host.
+                // CacheSeconds=0 makes rule changes take effect immediately.
+                ["IpAccessControl:Enabled"] = "true",
+                ["IpAccessControl:TrustForwardedFor"] = "true",
+                ["IpAccessControl:MaxFailedAttempts"] = "5",
+                ["IpAccessControl:CacheSeconds"] = "0"
             });
         });
     }

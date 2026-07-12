@@ -118,6 +118,34 @@ Server-side UI exists only as an admin dashboard under `/Admin`
 - **Account creation is admin-only**: there is no public registration endpoint.
   Users are created here (`CreateUserCommand`); the first admin comes from the
   bootstrap setting or the seed script. The desktop client only signs in.
+
+### IP access control
+
+Default-deny IP filtering guards every request.
+
+- **Decision logic** lives in the pure, unit-tested `IpRuleEvaluator`:
+  loopback/unknown → allow (localhost can never be locked out); else blacklist
+  match (`*` or exact) → deny; else whitelist match (`*` or exact) → allow;
+  else deny. Blacklist is evaluated before whitelist.
+- **`IIpAccessControl`** (Infrastructure singleton) caches the rule sets, records
+  every login attempt to `LoginAttempts`, and auto-blacklists an IP after
+  `MaxFailedAttempts` failures in the window (skipping loopback). Rule mutations
+  and auto-blacklists `Invalidate()` the cache so changes take effect at once.
+- **`IpAccessMiddleware`** runs early (before rate limiting/auth), resolves the
+  client IP once via `ClientIp` (socket address, or `X-Forwarded-For` only when
+  `TrustForwardedFor` is set) and stashes it in `HttpContext.Items` so audit and
+  login-attempt records use the same value the filter enforced. Blocked requests
+  get `403` (JSON for `/api`, plain text elsewhere).
+- **Login handlers** (`LoginCommand`, `AdminLoginQuery`) record success/failure
+  with reason and source. Both go through the same recorder, so the "5 failed
+  logins" rule and the login-attempts view cover API and dashboard alike.
+- **Admin slices** (`GetIpAccessRules`, `AddIpAccessRule`, `DeleteIpAccessRule`,
+  `GetLoginAttempts`) back the IP-access and login-attempts pages; mutations are
+  antiforgery-protected and audited.
+- **Tables**: `IpAccessRules` (whitelist/blacklist, `IsAuto` flag) and
+  `LoginAttempts` (email, IP, success, reason, source), added by
+  `database/005_ip_access.sql`. No rows are seeded — default-deny is the
+  evaluator's behavior, not a data row.
 - **Bootstrap**: `Admin:BootstrapEmail` promotes an existing account at startup
   (idempotent); `Users.IsAdmin` defaults to 0 and the schema script upgrades
   older databases in place.

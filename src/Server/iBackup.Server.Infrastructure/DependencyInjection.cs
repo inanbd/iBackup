@@ -16,12 +16,14 @@ public static class DependencyInjection
     {
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+        services.Configure<IpAccessOptions>(configuration.GetSection(IpAccessOptions.SectionName));
 
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IFileStorage, DiskFileStorage>();
         services.AddSingleton<IAuditLogger, SqlAuditLogger>();
+        services.AddSingleton<IIpAccessControl, IpAccessControl>();
         services.AddSingleton<DbInitializer>();
 
         services.AddHostedService<AbandonedUploadCleanupService>();
